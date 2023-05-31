@@ -1,1 +1,0 @@
-# vue_location_web
