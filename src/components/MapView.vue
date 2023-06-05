@@ -73,7 +73,7 @@ export default {
     return {
       searchInput: '',
       map: null,
-      markerLayer: null,
+      markers: [],
       locationName: '',
       timeZone: '',
       localTime: '',
@@ -112,8 +112,10 @@ export default {
               this.updateMap(lat, lng);
               this.addMarker(lat, lng);
               this.locationName = features[0].place_name;
-              this.getTimeZone(lat, lng);
-              this.addToSearchHistory(this.locationName, this.timeZone, this.localTime);
+              this.getTimeZone(lat, lng).then(() => {
+                this.addToSearchHistory(this.locationName, this.timeZone, this.localTime,lat,lng);
+              });
+            
             } else {
               console.log('No results found');
             }
@@ -127,14 +129,11 @@ export default {
       this.map.setView([lat, lng], 12);
     },
     addMarker(lat, lng) {
-      if (this.markerLayer) {
-        this.markerLayer.clearLayers();
-      }
       const marker = L.marker([lat, lng]).addTo(this.map);
-      this.markerLayer = L.layerGroup([marker]).addTo(this.map);
+      this.markers.push(marker);
     },
     getTimeZone(lat, lng) {
-      axios
+      return axios
         .get('https://api.timezonedb.com/v2.1/get-time-zone', {
           params: {
             key: 'U085297ZCJHG',
@@ -145,7 +144,6 @@ export default {
           }
         })
         .then(response => {
-          console.log(response.data);
           //this.timeZone = response.data.zoneName;
           this.timeZone = response.data.nextAbbreviation;
           //const currentTime = new Date(response.data.timestamp * 1000);
@@ -156,11 +154,14 @@ export default {
           console.log('Error:', error);
         });
     },
-    addToSearchHistory(location, timeZone, localTime) {
+    addToSearchHistory(location, timeZone, localTime, lat, lng) {
       const searchItem = {
         location: location,
         timeZone: timeZone,
-        localTime: localTime
+        localTime: localTime,
+        lat: lat,
+        lng: lng
+
       };
       this.searchHistory.unshift(searchItem);
     },
@@ -183,20 +184,27 @@ export default {
       }
     },
     deleteSelectedItems() {
-      const indexes = this.selectedItems.sort((a, b) => b - a);
+      const indexes = this.selectedItems.sort((a, b) => b - a);//通过 selectedItems 数组中的索引来迭代需要删除的项,降序排列
       indexes.forEach(index => {
-        const item = this.searchHistory[index];
+        const item = this.searchHistory[index];//根据索引从 searchHistory 数组中获取相应的项
+        const markerIndex = this.markers.findIndex(marker => marker.getLatLng().lat === item.lat && marker.getLatLng().lng === item.lng);//使用 findIndex 方法和 getLatLng() 函数来查找与 item.location 相匹配的标记
+        if (markerIndex !== -1) {
+          const marker = this.markers[markerIndex];
+          this.map.removeLayer(marker);
+          this.markers.splice(markerIndex, 1);
+        }
         this.searchHistory.splice(index, 1);
-        this.removeMarker(item.location);
       });
       this.selectedItems = [];
     },
-    removeMarker(location) {
-      const index = this.searchHistory.findIndex(item => item.location === location);
-      if (index !== -1 && this.markerLayer) {
-        this.markerLayer.getLayers()[index].remove();
-      }
-    },
+    // removeMarker(location) {
+    //   const index = this.searchHistory.findIndex(item => item.location === location);
+    //   if (index !== -1 ) {
+    //     const marker = this.markers[index];
+    //     this.map.removeLayer(marker);  // remove markers from map
+    //     this.markers.splice(index, 1);  // remove from markers array
+    //   }
+    // },
     handlePageChange(page) {
       this.currentPage = page;
     }
