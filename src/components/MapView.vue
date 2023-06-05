@@ -1,6 +1,6 @@
 <!-- eslint-disable-next-line vue/multi-word-component-names -->
 <template>
-  <div class="container">
+  <div class="container mt-4 mb-4">
     <div class="row mb-4">
       <div class="col-6">
         <input v-model="searchInput" class="form-control" placeholder="Enter a location" @keyup.enter="searchLocation" />
@@ -47,7 +47,7 @@
           </tbody>
         </table>
         <div class="text-center">
-          <pagination :list="searchHistory" :per-page="10" v-model="currentPage" @input="handlePageChange"></pagination>
+          <pagination v-model="currentPage" :records="searchHistory.length" :list="searchHistory" :per-page="10" @input="handlePageChange"/>
         </div>
         <div class="text-center">
           <button class="btn btn-danger" @click="deleteSelectedItems">Delete Selected</button>
@@ -61,7 +61,8 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
-import Pagination from 'vue-pagination-2';
+import Pagination from 'v-pagination-3';
+
 
 
 export default {
@@ -144,9 +145,12 @@ export default {
           }
         })
         .then(response => {
-          this.timeZone = response.data.zoneName;
-          const currentTime = new Date(response.data.timestamp * 1000);
-          this.localTime = currentTime.toLocaleString();
+          console.log(response.data);
+          //this.timeZone = response.data.zoneName;
+          this.timeZone = response.data.nextAbbreviation;
+          //const currentTime = new Date(response.data.timestamp * 1000);
+          //this.localTime = currentTime.toLocaleString();
+          this.localTime = response.data.formatted;
         })
         .catch(error => {
           console.log('Error:', error);
@@ -168,9 +172,9 @@ export default {
           this.updateMap(lat, lng);
           this.addMarker(lat, lng);
           this.searchInput = ''; // Clear the search input
-          this.locationName = 'Current Location';
-          this.getTimeZone(lat, lng);
-          this.addToSearchHistory(this.locationName, this.timeZone, this.localTime);
+          //this.locationName = 'Current Location';
+          //this.getTimeZone(lat, lng);
+          //this.addToSearchHistory(this.locationName, this.timeZone, this.localTime);
         }, error => {
           console.log('Error:', error);
         });
