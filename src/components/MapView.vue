@@ -173,9 +173,6 @@ export default {
           this.updateMap(lat, lng);
           this.addMarker(lat, lng);
           this.searchInput = ''; // Clear the search input
-          //this.locationName = 'Current Location';
-          //this.getTimeZone(lat, lng);
-          //this.addToSearchHistory(this.locationName, this.timeZone, this.localTime);
         }, error => {
           console.log('Error:', error);
         });
@@ -184,27 +181,19 @@ export default {
       }
     },
     deleteSelectedItems() {
-      const indexes = this.selectedItems.sort((a, b) => b - a);//通过 selectedItems 数组中的索引来迭代需要删除的项,降序排列
+      const indexes = this.selectedItems.sort((a, b) => b - a);//To iterate the item to be deleted according to the selectedItems, sorting as desc
       indexes.forEach(index => {
-        const item = this.searchHistory[index];//根据索引从 searchHistory 数组中获取相应的项
-        const markerIndex = this.markers.findIndex(marker => marker.getLatLng().lat === item.lat && marker.getLatLng().lng === item.lng);//使用 findIndex 方法和 getLatLng() 函数来查找与 item.location 相匹配的标记
+        const item = this.searchHistory[index];//Access corresponding item from searchHistory using index
+        const markerIndex = this.markers.findIndex(marker => marker.getLatLng().lat === item.lat && marker.getLatLng().lng === item.lng);//find the matching marker using lat and lng
         if (markerIndex !== -1) {
           const marker = this.markers[markerIndex];
-          this.map.removeLayer(marker);
-          this.markers.splice(markerIndex, 1);
+          this.map.removeLayer(marker); //remove the marker from the map
+          this.markers.splice(markerIndex, 1); //remove from the array
         }
         this.searchHistory.splice(index, 1);
       });
       this.selectedItems = [];
     },
-    // removeMarker(location) {
-    //   const index = this.searchHistory.findIndex(item => item.location === location);
-    //   if (index !== -1 ) {
-    //     const marker = this.markers[index];
-    //     this.map.removeLayer(marker);  // remove markers from map
-    //     this.markers.splice(index, 1);  // remove from markers array
-    //   }
-    // },
     handlePageChange(page) {
       this.currentPage = page;
     }
